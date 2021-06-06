@@ -112,6 +112,45 @@ break;
 LCD_command(adress|0x80);
 }
 
+long double toRadians(const long double degree)
+{ //long double M_PI = (long double) 3.141592654;
+long double one_deg = 3.141592654 / 180;
+return (one_deg * degree);
+}
+
+
+long double distance(long double lat1, long double long1,
+long double lat2, long double long2)
+{
+// Convert the latitudes
+// and longitudes
+// from degree to radians.
+lat1 = toRadians(lat1);
+long1 = toRadians(long1);
+lat2 = toRadians(lat2);
+long2 = toRadians(long2);
+//printf("%f %f %f %f \n", lat1,long1,lat2,long2);
+// Haversine Formula
+long double dlong = long2 - long1;
+long double dlat = lat2 - lat1;
+//printf("%f %f \n", dlong,dlat);
+long double ans = pow(sin(dlat / 2), 2) +
+cos(lat1) * cos(lat2) *
+pow(sin(dlong / 2), 2);
+//printf("%f \n", ans);
+ans = 2 * asin(sqrt(ans));
+//printf(("%f \n"), ans);
+// Radius of Earth in
+// Kilometers, R = 6371
+// Use R = 3956 for miles
+long double R = 6371;
+
+
+ // Calculate the result
+ans = ans * R;
+//printf("%f \n", ans);
+return ans;
+}
 int main(){
 init_uart();
 init();
