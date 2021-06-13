@@ -119,3 +119,187 @@ break;
 }
 LCD_command(adress|0x80);
 }
+float toRadians(const float degree)
+{ //long double M_PI = (long double) 3.141592654;
+    float one_deg = 3.141592654 / 180;
+return (one_deg * degree);
+}
+
+
+float distance(float lat1, float long1,
+float lat2, float long2)
+{
+// Convert the latitudes
+// and longitudes
+// from degree to radians.
+lat1 = toRadians(lat1);
+long1 = toRadians(long1);
+lat2 = toRadians(lat2);
+long2 = toRadians(long2);
+//printf("%f %f %f %f \n", lat1,long1,lat2,long2);
+// Haversine Formula
+float dlong = long2 - long1;
+float dlat = lat2 - lat1;
+//printf("%f %f \n", dlong,dlat);
+float ans = pow(sin(dlat / 2), 2) +
+cos(lat1) * cos(lat2) *
+pow(sin(dlong / 2), 2);
+//printf("%f \n", ans);
+ans = 2 * asin(sqrt(ans));
+//printf(("%f \n"), ans);
+// Radius of Earth in
+// Kilometers, R = 6371
+// Use R = 3956 for miles
+float R = 6371;
+
+
+ // Calculate the result
+ans = ans * R;
+//printf("%f \n", ans);
+return ans;
+}
+void gps(){
+
+    while(1){
+
+
+    }
+}
+
+int main(void)
+{
+
+    init_uart();
+    init();
+    int u=0;
+    distanc = 0.0;
+
+while(1){
+
+     readGPSModule();
+
+}
+
+
+}
+
+
+//$GPRMC,200751.00,A,4047.32510,N,02929.63031,E,9.879,105.80,301117,,,A*6C
+void readGPSModule(void){
+    char c0,GPSValues[100],latitudeResult[10],longitudeResult[10],parseValue[12][20],*token;
+    double latitude=0.0,longitude=0.0,seconds=0.0,laresult=0.0,loresult=0.0,minutes=0.0;
+    const char comma[2] = ",";
+    int index=0,degrees;
+
+
+    while((UART2_FR_R&0x0010) !=0);
+    c0=UART2_DR_R&0xFF;
+
+    //gelen data $GPRMC mi?
+    if(c0=='$'){
+        while((UART2_FR_R&0x0010) !=0);
+        char c1=UART2_DR_R&0xFF;
+        if(c1=='G'){
+            while((UART2_FR_R&0x0010) !=0);
+            char c2=UART2_DR_R&0xFF;
+            if(c2=='P'){
+                while((UART2_FR_R&0x0010) !=0);
+                char c3=UART2_DR_R&0xFF;
+                if(c3=='R'){
+                    while((UART2_FR_R&0x0010) !=0);
+                    char c4=UART2_DR_R&0xFF;
+                    if(c4=='M'){
+                        while((UART2_FR_R&0x0010) !=0);
+                        char c5=UART2_DR_R&0xFF;
+                        if(c5=='C'){
+                            while((UART2_FR_R&0x0010) !=0);
+                            char c6=UART2_DR_R&0xFF;
+                            if(c6==','){
+                                while((UART2_FR_R&0x0010) !=0);
+                                char c7=UART2_DR_R&0xFF;
+
+                                //verileri GPSValues arrayine atama.son veri olan checksum a kadar oku(checksum:A*60 gibi)
+                                while(c7!='*'){
+                                    GPSValues[index]=c7;
+                                    while((UART2_FR_R&0x0010) !=0);
+                                    c7=UART2_DR_R&0xFF;
+                                    index++;}
+
+
+                                //GPSValues arrayindeki verileri virgul e gore ayirma
+                                index=0;
+                                token = strtok(GPSValues, comma);
+                                while( token != NULL ) {
+                                    strcpy(parseValue[index], token);
+                                    token = strtok(NULL, comma);
+                                    index++;}
+
+
+                                //parseValue[1] = A ise veri gecerli - V ise gecerli degil
+                                if(strcmp(parseValue[1],"A")==0){
+                                    latitude=atof(parseValue[2]);
+                                    longitude=atof(parseValue[4]);
+
+
+                                    //latitude hesaplama
+                                    degrees=latitude/100;
+                                    minutes=latitude-(double)(degrees*100);
+                                    seconds=minutes/60.00;
+                                    laresult=degrees+seconds;
+                                    lat= laresult;
+                                   // sprintf(latitudeResult,"%f", laresult);
+
+
+                                    //longitude hesaplama
+                                    degrees=longitude/100;
+                                    minutes=longitude-(double)(degrees*100);
+                                    seconds=minutes/60.00;
+                                    loresult=degrees+seconds;
+                                    longt= loresult;
+                                    //sprintf(longitudeResult, "%f", loresult);
+
+                                    coordnites[0][u]=laresult;
+                                    coordnites[1][u]=loresult;
+
+
+                                    if(u<=1){
+                                        //sprintf(longitudeResult, "%f", coordnites[1][u]);
+                                        distanc = 0;
+                                        sprintf(latitudeResult, "%f", distanc);
+                                        LCD_command(0x1);
+                                        LCD_G_rc(0,2);
+                                        LCD_string(latitudeResult);
+                                        sprintf(longitudeResult, "%d",u);
+                                        LCD_G_rc(1,4);
+                                        LCD_string(longitudeResult);
+                                        printf("%f,%f\n",coordnites[0][u],coordnites[1][u]);
+
+                                    }
+                                    else {
+                       distanc += distance(coordnites[0][u-2],coordnites[1][u-2],coordnites[0][u-1],coordnites[1][u-1])*1000;
+
+
+                                    LCD_command(0x1);
+                                    LCD_G_rc(0,0);
+                                    LCD_string("DISTANCE IN  'm'");
+                                    sprintf(latitudeResult, "%f", distanc);
+                                    LCD_G_rc(1,3);
+                                    LCD_string(latitudeResult);
+                                    printf("%f,%f\n",coordnites[0][u],coordnites[1][u]);
+                                    if (is_exeeded(distanc)){
+                                    GPIO_PORTF_DATA_R |= 0x08;
+                                    }
+                                    }
+                                    u++;
+
+                                    delay(1000000);
+                                 //   SysCtlDelay(SysCtlClockGet()/6);
+                                }
+                                else{
+                                    LCD_command(0x1);
+                                    LCD_G_rc(0,1);
+                                    LCD_string("GPS VOID");}
+
+                                printf("");
+                        }}}}}}}
+}
