@@ -58,7 +58,9 @@ delay(100);
 // GPIO_PORTB_DATA_R |=0x00;// E = 0
 // }
 }
-void LCD_string(char *str){
+
+
+ void LCD_string(char *str){
 int count=0;
 while(str[count]!='\0'){
 LCD_data(str[count]);
@@ -119,6 +121,7 @@ break;
 }
 LCD_command(adress|0x80);
 }
+
 float toRadians(const float degree)
 { //long double M_PI = (long double) 3.141592654;
     float one_deg = 3.141592654 / 180;
@@ -218,7 +221,7 @@ void readGPSModule(void){
                                 while((UART2_FR_R&0x0010) !=0);
                                 char c7=UART2_DR_R&0xFF;
 
-                                //verileri GPSValues arrayine atama.son veri olan checksum a kadar oku(checksum:A*60 gibi)
+                                
                                 while(c7!='*'){
                                     GPSValues[index]=c7;
                                     while((UART2_FR_R&0x0010) !=0);
@@ -226,7 +229,7 @@ void readGPSModule(void){
                                     index++;}
 
 
-                                //GPSValues arrayindeki verileri virgul e gore ayirma
+                                
                                 index=0;
                                 token = strtok(GPSValues, comma);
                                 while( token != NULL ) {
@@ -235,13 +238,13 @@ void readGPSModule(void){
                                     index++;}
 
 
-                                //parseValue[1] = A ise veri gecerli - V ise gecerli degil
+                                
                                 if(strcmp(parseValue[1],"A")==0){
                                     latitude=atof(parseValue[2]);
                                     longitude=atof(parseValue[4]);
 
 
-                                    //latitude hesaplama
+                                    
                                     degrees=latitude/100;
                                     minutes=latitude-(double)(degrees*100);
                                     seconds=minutes/60.00;
@@ -250,7 +253,7 @@ void readGPSModule(void){
                                    // sprintf(latitudeResult,"%f", laresult);
 
 
-                                    //longitude hesaplama
+                                    
                                     degrees=longitude/100;
                                     minutes=longitude-(double)(degrees*100);
                                     seconds=minutes/60.00;
@@ -303,3 +306,4 @@ void readGPSModule(void){
                                 printf("");
                         }}}}}}}
 }
+
